@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Dashboard — YourBrand</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <script src="https://cdn.tailwindcss.com?plugins=typography"></script>
+</head>
+
+<body class="bg-gray-100 min-h-screen">
+
+<header class="bg-white border-b">
+  <div class="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
+    <h1 class="text-xl font-bold">YourBrand</h1>
+    <button class="bg-black text-white px-4 py-2 rounded">Logout</button>
+  </div>
+</header>
+
+<main class="max-w-7xl mx-auto px-6 py-10">
+  <h2 class="text-3xl font-bold mb-2">Dashboard</h2>
+  <p class="text-gray-700 mb-8">Run automations powered by n8n</p>
+
+  <div class="bg-white rounded-lg shadow p-6 max-w-md">
+    <h3 class="text-xl font-semibold mb-2">AI Blog Generator</h3>
+    <p class="text-gray-600 mb-4">Generate a complete blog as a web page using AI.</p>
+    <button onclick="openModal()" class="bg-black text-white px-4 py-2 rounded">
+      Generate Blog
+    </button>
+  </div>
+
+  <div class="bg-white rounded-lg shadow p-6 mt-8">
+    <h3 class="text-xl font-semibold mb-4">Generated Web Page</h3>
+    <p class="text-gray-500">Blog will open in a new tab.</p>
+  </div>
+</main>
+
+<!-- MODAL -->
+<div id="modal" class="fixed inset-0 bg-black/50 hidden items-center justify-center z-50">
+  <div class="bg-white p-6 rounded-lg w-full max-w-md">
+    <h4 class="text-lg font-semibold mb-3">Enter Blog Topic</h4>
+
+    <input
+      id="topicInput"
+      class="w-full border p-2 rounded mb-4"
+      placeholder="e.g. Street food culture in India"
+    />
+
+    <div class="flex gap-2">
+      <button onclick="generateBlog()" class="bg-black text-white px-4 py-2 rounded w-full">
+        Run Automation
+      </button>
+      <button onclick="closeModal()" class="border px-4 py-2 rounded w-full">
+        Cancel
+      </button>
+    </div>
+  </div>
+</div>
+
+<script>
+  const N8N_WEBHOOK = "https://dev75.app.n8n.cloud/webhook/generate-blog";
+
+  function openModal() {
+    document.getElementById("modal").classList.remove("hidden");
+    document.getElementById("modal").classList.add("flex");
+  }
+
+  function closeModal() {
+    document.getElementById("modal").classList.add("hidden");
+    document.getElementById("modal").classList.remove("flex");
+  }
+
+  async function generateBlog() {
+    const topic = document.getElementById("topicInput").value.trim();
+    if (!topic) {
+      alert("Enter a topic");
+      return;
+    }
+
+    // ✅ Open tab immediately (Safari requires user gesture)
+    const blogTab = window.open("about:blank", "_blank");
+
+    closeModal();
+
+    try {
+      const res = await fetch(N8N_WEBHOOK, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ topic })
+      });
+
+      const html = await res.text();
+
+      // ✅ WRITE RAW HTML DIRECTLY
+      blogTab.document.open();
+      blogTab.document.write(html);
+      blogTab.document.close();
+
+    } catch (err) {
+      blogTab.document.write("<h2>Failed to generate blog</h2>");
+      console.error(err);
+    }
+  }
+</script>
+
+</body>
+</html>
